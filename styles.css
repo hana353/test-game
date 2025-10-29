@@ -57,7 +57,6 @@ img, .item-thumb {
   align-items: center;
   gap: 0.5rem;
 }
-
 /* 🩵 TIÊU ĐỀ */
 #heading {
   position: absolute;
@@ -230,13 +229,13 @@ img, .item-thumb {
 /* 💜 NÚT CHỌN ITEM */
 /* Nhóm nút căn sát đáy khung */
 .buttonBox {
-  position: absolute;
-  bottom: 0; /* Sát đáy */
-  left: 0;
   width: 100%;
   display: flex;
   justify-content: center;
   gap: 0.5rem;
+  padding-bottom: 0px; /* Tạo khoảng cách nhẹ với mép khung */
+  margin: 0;
+}
 }
 button {
   margin-top: 1em;
