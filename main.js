@@ -247,7 +247,7 @@ document.getElementById("shareBtn").onclick = async function () {
   bgLayer.style.backgroundImage = "url('./images4/background2.png')";
   bgLayer.style.backgroundSize = "cover";
   bgLayer.style.backgroundPosition = "center";
-  bgLayer.style.opacity = "1";
+  bgLayer.style.opacity = "0.3";
   bgLayer.style.zIndex = "0";
   bgLayer.style.pointerEvents = "none";
   area.insertBefore(bgLayer, area.firstChild);
@@ -255,20 +255,10 @@ document.getElementById("shareBtn").onclick = async function () {
 
   let imgData = "";
   try {
-    // Chụp theo bounding box của #character để luôn chỉ lấy phần ô nhân vật
-    const rect = area.getBoundingClientRect();
-    const canvas = await html2canvas(document.body, {
+    const canvas = await html2canvas(area, {
       backgroundColor: null,
       useCORS: true,
-      scale: Math.max(2, window.devicePixelRatio || 1),
-      x: Math.round(rect.left + window.scrollX),
-      y: Math.round(rect.top + window.scrollY),
-      width: Math.round(rect.width),
-      height: Math.round(rect.height),
-      windowWidth: document.documentElement.clientWidth,
-      windowHeight: document.documentElement.clientHeight,
-      scrollX: -window.scrollX,
-      scrollY: -window.scrollY
+      scale: 2
     });
     imgData = canvas.toDataURL("image/png");
   } catch (e) {
@@ -294,12 +284,11 @@ document.getElementById("shareBtn").onclick = async function () {
   // Ghi nội dung vào cửa sổ đã mở lúc đầu
   const html = `
     <html>
-      <head><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
-      <body style="text-align:center; font-family:sans-serif; margin:16px;">
-        <h2 style="margin:12px 0;">Share Your Siggy!</h2>
-        ${imgData ? `<img src="${imgData}" style="max-width:92vw; height:auto; border-radius:10px; box-shadow:0 0 5px #999;"/>` : ''}
-        <p style="margin:16px 0;"><a href="${twitterUrl}" target="_self" style="font-size:18px; text-decoration:none; padding:10px 14px; border-radius:10px; background:#000; color:#fff; display:inline-block;">Post on X 🚀</a></p>
-        <p style="opacity:.7; font-size:14px;">Tap and hold the image to save (if needed)</p>
+      <body style="text-align:center; font-family:sans-serif;">
+        <h2>Share Your Siggy!</h2>
+        ${imgData ? `<img src="${imgData}" style="width:300px; border-radius:10px; box-shadow:0 0 5px #999;"/>` : ''}
+        <p><a href="${twitterUrl}" target="_blank" style="font-size:18px;">Post on X 🚀</a></p>
+        <p>(Right-click to save your image if needed)</p>
       </body>
     </html>
   `;
