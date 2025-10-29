@@ -1,236 +1,671 @@
-// 🌙 Moongirl Dress-up Game
+// 🌙 Moongirl Dress-up Game - Optimized Version
 
-let state = {
+// Configuration
+const CONFIG = {
+  multiSelectTypes: new Set(['accessory', 'pet']),
+  folders: {
+    hat: 'hat',
+    clothes: 'clothes',
+    accessory: 'accessory',
+    pet: 'pet'
+  },
+  items: {
+    hat: ['H1.png', 'H2.png', 'H3.png', 'H4.png', 'H5.png', 'H6.png'],
+    clothes: ['C1.png', 'C2.png', 'C3.png', 'C4.png', 'C5.png', 'C6.png'],
+    accessory: ['A1.png', 'A2.png', 'A3.png', 'A4.png', 'A5.png', 'A6.png', 'A7.png', 'A8.png', 'A9.png'],
+    pet: ['P1.png', 'P2.png', 'P3.png', 'P4.png', 'P5.png', 'P6.png', 'P7.png', 'P8.png', 'P9.png', 'P10.png', 'P11.png']
+  }
+};
+
+// State management
+const state = {
   hat: -1,
   clothes: -1,
   accessory: [],
-  pet: [],
-};
-
-const items = {
-  hat: ["H1.png","H2.png","H3.png","H4.png","H5.png","H6.png"],
-  clothes: ["C1.png","C2.png","C3.png","C4.png","C5.png","C6.png"],
-  accessory: ["A1.png","A2.png","A3.png","A4.png","A5.png","A6.png","A7.png","A8.png","A9.png"],
-  pet: ["P1.png","P2.png","P3.png","P4.png","P5.png","P6.png","P7.png","P8.png","P9.png","P10.png","P11.png"],
-};
-
-const folderOfType = {
-  hat: "hat",
-  clothes: "clothes",
-  accessory: "accessory",
-  pet: "pet",
+  pet: []
 };
 
 let currentType = null;
-function isMultiType(type) {
-  return type === "accessory" || type === "pet";
-}
 
-window.onload = () => {
-  Object.keys(state).forEach(type => updateCharacter(type, state[type]));
-  document.getElementById("itemList").classList.add("hidden");
+// Utility functions
+const isMultiType = (type) => CONFIG.multiSelectTypes.has(type);
+
+const getImagePath = (type, filename) => 
+  `./${CONFIG.folders[type]}/${encodeURIComponent(filename)}`;
+
+// DOM cache
+const DOM = {
+  itemList: null,
+  character: null,
+  shareBtn: null
 };
 
-document.addEventListener("contextmenu", function (e) {
-  if (e.target && e.target.classList && e.target.classList.contains("item-thumb")) {
-    e.preventDefault();
-  }
-}, { capture: true });
+// Initialize
+function init() {
+  // Cache DOM elements
+  DOM.itemList = document.getElementById('itemList');
+  DOM.character = document.getElementById('character');
+  DOM.shareBtn = document.getElementById('shareBtn');
 
-function showItems(type) {
-  const listBox = document.getElementById("itemList");
-  if (currentType === type && !listBox.classList.contains("hidden")) {
-    listBox.classList.add("hidden");
-    currentType = null;
-    return;
-  }
-  currentType = type;
-  listBox.innerHTML = "";
-  listBox.classList.remove("hidden");
-  if (!items[type] || items[type].length === 0) {
-    listBox.classList.add("hidden");
-    currentType = null;
-    return;
-  }
-  const title = document.createElement("h3");
-  title.textContent = `Choose ${type}`;
-  title.style.textTransform = "capitalize";
-  listBox.appendChild(title);
+  // Render initial character state
+  Object.keys(state).forEach(type => updateCharacter(type));
+  
+  // Hide item list initially
+  DOM.itemList.classList.add('hidden');
 
-  items[type].forEach((img, index) => {
-    const thumb = document.createElement("img");
-    thumb.src = `./${folderOfType[type]}/${encodeURIComponent(img)}`;
-    thumb.className = "item-thumb";
-    if (isMultiType(type) && Array.isArray(state[type]) && state[type].includes(index)) {
-      thumb.classList.add("selected-thumb");
-    } else if (!isMultiType(type) && state[type] === index) {
-      thumb.classList.add("selected-thumb");
+  // Setup event listeners
+  setupEventListeners();
+}
+
+function setupEventListeners() {
+  // Prevent context menu on touch devices
+  document.addEventListener('contextmenu', (e) => {
+    if (e.target?.classList?.contains('item-thumb')) {
+      e.preventDefault();
     }
+  }, { passive: false, capture: true });
 
-    thumb.onclick = () => {
-      if (isMultiType(type)) {
-        if (!Array.isArray(state[type])) state[type] = [];
-        const pos = state[type].indexOf(index);
-        if (pos >= 0) {
-          state[type].splice(pos, 1);
-          thumb.classList.remove("selected-thumb");
-        } else {
-          state[type].push(index);
-          thumb.classList.add("selected-thumb");
-        }
-        updateCharacter(type);
-      } else {
-        const wasSelected = state[type] === index;
-        state[type] = wasSelected ? -1 : index;
-        document.querySelectorAll(".item-thumb").forEach(el => el.classList.remove("selected-thumb"));
-        if (!wasSelected) thumb.classList.add("selected-thumb");
-        updateCharacter(type, state[type]);
-      }
-    };
-    listBox.appendChild(thumb);
-  });
+  // Share button
+  DOM.shareBtn.addEventListener('click', handleShare);
 }
 
-function selectItem(type, index) {
+// Item list management
+function showItems(type) {
+  const items = CONFIG.items[type];
+  
+  // Toggle list visibility
+  if (currentType === type && !DOM.itemList.classList.contains('hidden')) {
+    hideItemList();
+    return;
+  }
+
+  // Validate items exist
+  if (!items?.length) {
+    hideItemList();
+    return;
+  }
+
+  currentType = type;
+  renderItemList(type, items);
+}
+
+function hideItemList() {
+  DOM.itemList.classList.add('hidden');
+  currentType = null;
+}
+
+function renderItemList(type, items) {
+  // Clear and show list
+  DOM.itemList.innerHTML = '';
+  DOM.itemList.classList.remove('hidden');
+
+  // Create title
+  const title = document.createElement('h3');
+  title.textContent = `Choose ${type}`;
+  title.style.textTransform = 'capitalize';
+  DOM.itemList.appendChild(title);
+
+  // Create fragment for better performance
+  const fragment = document.createDocumentFragment();
+
+  items.forEach((img, index) => {
+    const thumb = createThumbnail(type, img, index);
+    fragment.appendChild(thumb);
+  });
+
+  DOM.itemList.appendChild(fragment);
+}
+
+function createThumbnail(type, img, index) {
+  const thumb = document.createElement('img');
+  thumb.src = getImagePath(type, img);
+  thumb.className = 'item-thumb';
+  thumb.loading = 'lazy'; // Lazy load images
+
+  // Set selected state
+  const isSelected = isMultiType(type) 
+    ? state[type].includes(index)
+    : state[type] === index;
+  
+  if (isSelected) {
+    thumb.classList.add('selected-thumb');
+  }
+
+  // Handle click
+  thumb.addEventListener('click', () => handleItemClick(type, index, thumb));
+
+  return thumb;
+}
+
+function handleItemClick(type, index, thumb) {
   if (isMultiType(type)) {
-    if (!Array.isArray(state[type])) state[type] = [];
-    const pos = state[type].indexOf(index);
-    if (pos >= 0) state[type].splice(pos, 1); else state[type].push(index);
-    updateCharacter(type);
+    handleMultiSelect(type, index, thumb);
   } else {
-    state[type] = state[type] === index ? -1 : index;
-    updateCharacter(type, state[type]);
+    handleSingleSelect(type, index, thumb);
+  }
+  updateCharacter(type);
+}
+
+function handleMultiSelect(type, index, thumb) {
+  const pos = state[type].indexOf(index);
+  
+  if (pos >= 0) {
+    state[type].splice(pos, 1);
+    thumb.classList.remove('selected-thumb');
+  } else {
+    state[type].push(index);
+    thumb.classList.add('selected-thumb');
   }
 }
 
-function updateCharacter(type, index) {
-  const element = document.querySelector(`#${type}`);
+function handleSingleSelect(type, index, thumb) {
+  const wasSelected = state[type] === index;
+  state[type] = wasSelected ? -1 : index;
+
+  // Update all thumbnails
+  DOM.itemList.querySelectorAll('.item-thumb').forEach(el => 
+    el.classList.remove('selected-thumb')
+  );
+
+  if (!wasSelected) {
+    thumb.classList.add('selected-thumb');
+  }
+}
+
+// Character rendering
+function updateCharacter(type) {
+  const element = document.getElementById(type);
   if (!element) return;
 
   if (isMultiType(type)) {
-    const selected = Array.isArray(state[type]) ? state[type] : [];
-    element.innerHTML = "";
-    element.style.backgroundImage = "none";
-    if (selected.length === 0) return;
-    selected.forEach(i => {
-      const child = document.createElement("div");
-      child.style.position = "absolute";
-      child.style.top = "0";
-      child.style.left = "0";
-      child.style.width = "100%";
-      child.style.height = "100%";
-      child.style.backgroundImage = `url('./${folderOfType[type]}/${encodeURIComponent(items[type][i])}')`;
-      child.style.backgroundRepeat = "no-repeat";
-      child.style.backgroundPosition = "center";
-      child.style.backgroundSize = "contain";
-      child.style.pointerEvents = "none";
-      element.appendChild(child);
-    });
+    renderMultiLayers(element, type);
   } else {
-    if (index == null || index < 0) {
-      element.style.backgroundImage = "none";
-      return;
-    }
-    element.innerHTML = "";
-    element.style.backgroundImage = `url('./${folderOfType[type]}/${encodeURIComponent(items[type][index])}')`;
-    element.style.backgroundRepeat = "no-repeat";
-    element.style.backgroundPosition = "center";
-    element.style.backgroundSize = "contain";
-    element.style.position = "absolute";
-    element.style.width = "100%";
-    element.style.height = "100%";
-    element.style.top = "0";
-    element.style.left = "0";
-    element.style.pointerEvents = "none";
+    renderSingleLayer(element, type);
   }
 }
 
-document.getElementById("shareBtn").onclick = async function () {
-  const area = document.getElementById("character");
-  const newWindow = window.open("about:blank", "_blank");
-  let shouldRedirect = !newWindow;
+function renderMultiLayers(element, type) {
+  const selected = state[type];
+  
+  element.innerHTML = '';
+  element.style.backgroundImage = 'none';
 
-  // Thêm lớp nền tạm
-  const bgLayer = document.createElement("div");
-  bgLayer.style.position = "absolute";
-  bgLayer.style.top = "0";
-  bgLayer.style.left = "0";
-  bgLayer.style.width = "100%";
-  bgLayer.style.height = "100%";
-  bgLayer.style.backgroundImage = "url('./images4/background2.png')";
-  bgLayer.style.backgroundSize = "cover";
-  bgLayer.style.backgroundPosition = "center";
-  bgLayer.style.opacity = "0.3";
-  bgLayer.style.zIndex = "0";
-  bgLayer.style.pointerEvents = "none";
-  area.insertBefore(bgLayer, area.firstChild);
-  area.classList.add("exporting");
+  if (!selected.length) return;
 
-  let imgData = "";
+  const fragment = document.createDocumentFragment();
+  
+  selected.forEach(i => {
+    const layer = createLayer(type, CONFIG.items[type][i]);
+    fragment.appendChild(layer);
+  });
 
-  try {
-    // Clone vào div tạm 300x300 để mobile/desktop đều giống
-    const tempDiv = document.createElement("div");
-    tempDiv.style.width = "300px";
-    tempDiv.style.height = "300px";
-    tempDiv.style.position = "absolute";
-    tempDiv.style.top = "-9999px";
-    tempDiv.style.left = "-9999px";
-    tempDiv.style.background = "transparent";
-    tempDiv.appendChild(area.cloneNode(true));
-    document.body.appendChild(tempDiv);
+  element.appendChild(fragment);
+}
 
-    const canvas = await html2canvas(tempDiv, {
-      backgroundColor: null,
-      useCORS: true,
-      scale: 2
-    });
-    imgData = canvas.toDataURL("image/png");
-
-    document.body.removeChild(tempDiv);
-  } catch (e) {
-    console.error(e);
-  } finally {
-    area.classList.remove("exporting");
-    if (bgLayer && bgLayer.parentNode) bgLayer.parentNode.removeChild(bgLayer);
-  }
-
-  const text = encodeURIComponent(
-    "🎃 I just joined #SiggyHalloween contest!\n\nHelp Siggy get the purr-fect Halloween outfit 👻\n\nTry it now 👉 siggyhalloween.ritual.fun"
-  );
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${text}`;
-
-  if (shouldRedirect) {
-    window.location.href = twitterUrl;
+function renderSingleLayer(element, type) {
+  const index = state[type];
+  
+  element.innerHTML = '';
+  
+  if (index < 0) {
+    element.style.backgroundImage = 'none';
     return;
   }
 
-  // HTML popup
-  const html = `
-  <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        body { text-align: center; font-family: sans-serif; }
-        img.siggy { width: 300px; height: 300px; border-radius: 10px; box-shadow:0 0 5px #999; object-fit: cover; }
-        a { font-size: 18px; }
-        p { margin: 5px 0 0 0; }
-      </style>
-    </head>
-    <body>
-      <h2>Share Your Siggy!</h2>
-      ${imgData ? `<img src="${imgData}" class="siggy"/>` : ''}
-      <p><a href="${twitterUrl}" target="_blank">Post on X 🚀</a></p>
-      <p>(Right-click to save your image if needed)</p>
-    </body>
-  </html>
+  const imagePath = getImagePath(type, CONFIG.items[type][index]);
+  Object.assign(element.style, {
+    backgroundImage: `url('${imagePath}')`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    backgroundSize: 'contain',
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top: '0',
+    left: '0',
+    pointerEvents: 'none'
+  });
+}
+
+function createLayer(type, filename) {
+  const layer = document.createElement('div');
+  const imagePath = getImagePath(type, filename);
+  
+  Object.assign(layer.style, {
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    backgroundImage: `url('${imagePath}')`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    backgroundSize: 'contain',
+    pointerEvents: 'none'
+  });
+
+  return layer;
+}
+
+// Share functionality
+async function handleShare() {
+  // Disable button and show loading
+  DOM.shareBtn.disabled = true;
+  const originalText = DOM.shareBtn.textContent;
+  DOM.shareBtn.textContent = 'Capturing...';
+
+  // Create wrapper for capture with background
+  const wrapper = createCaptureWrapper();
+  document.body.appendChild(wrapper);
+
+  let imgData = '';
+  
+  try {
+    // Wait for all images to load
+    await waitForImagesToLoad(wrapper);
+    
+    // Add small delay to ensure rendering
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    imgData = await captureCharacter(wrapper);
+  } catch (error) {
+    console.error('Capture failed:', error);
+  } finally {
+    document.body.removeChild(wrapper);
+    // Re-enable button
+    DOM.shareBtn.disabled = false;
+    DOM.shareBtn.textContent = originalText;
+  }
+
+  // Show modal with image
+  showShareModal(imgData);
+}
+
+function createCaptureWrapper() {
+  // Get character dimensions
+  const charRect = DOM.character.getBoundingClientRect();
+  
+  // Create wrapper with exact character size
+  const wrapper = document.createElement('div');
+  Object.assign(wrapper.style, {
+    position: 'fixed',
+    top: '-9999px',
+    left: '-9999px',
+    width: `${charRect.width}px`,
+    height: `${charRect.height}px`,
+    overflow: 'hidden',
+    backgroundColor: 'transparent'
+  });
+
+  // Add background layer
+  const bgLayer = document.createElement('div');
+  Object.assign(bgLayer.style, {
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    backgroundImage: "url('./images4/background2.png')",
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    opacity: '0.3',
+    zIndex: '0'
+  });
+  wrapper.appendChild(bgLayer);
+
+  // Clone character content
+  const charClone = DOM.character.cloneNode(true);
+  Object.assign(charClone.style, {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+    background: 'transparent',
+    border: 'none',
+    boxShadow: 'none'
+  });
+  wrapper.appendChild(charClone);
+
+  return wrapper;
+}
+
+// Wait for all images in element to load
+function waitForImagesToLoad(element) {
+  const images = [];
+  
+  // Get all background images
+  const allElements = element.querySelectorAll('*');
+  allElements.forEach(el => {
+    const bgImage = window.getComputedStyle(el).backgroundImage;
+    if (bgImage && bgImage !== 'none') {
+      const urlMatch = bgImage.match(/url\(['"]?([^'"]+)['"]?\)/);
+      if (urlMatch && urlMatch[1]) {
+        images.push(urlMatch[1]);
+      }
+    }
+  });
+
+  // Get background of the element itself
+  const mainBg = window.getComputedStyle(element).backgroundImage;
+  if (mainBg && mainBg !== 'none') {
+    const urlMatch = mainBg.match(/url\(['"]?([^'"]+)['"]?\)/);
+    if (urlMatch && urlMatch[1]) {
+      images.push(urlMatch[1]);
+    }
+  }
+
+  // Create promises for each unique image
+  const uniqueImages = [...new Set(images)];
+  const imagePromises = uniqueImages.map(src => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve(); // Resolve anyway to not block
+      img.src = src;
+      
+      // Timeout after 5 seconds
+      setTimeout(() => resolve(), 5000);
+    });
+  });
+
+  return Promise.all(imagePromises);
+}
+
+async function captureCharacter(wrapper) {
+  const canvas = await html2canvas(wrapper, {
+    backgroundColor: null,
+    useCORS: true,
+    allowTaint: false,
+    scale: 2,
+    width: wrapper.offsetWidth,
+    height: wrapper.offsetHeight,
+    logging: false,
+    imageTimeout: 5000 // 5 second timeout for images
+  });
+  return canvas.toDataURL('image/png');
+}
+
+
+
+function buildTwitterUrl() {
+  const text = encodeURIComponent(
+    '🎃 I just joined #SiggyHalloween contest!\n\n' +
+    'Help Siggy get the purr-fect Halloween outfit 👻\n\n' +
+    'Try it now 👉 siggyhalloween.ritual.fun'
+  );
+  return `https://twitter.com/intent/tweet?text=${text}`;
+}
+
+function showShareModal(imgData) {
+  // Create modal overlay
+  const modal = document.createElement('div');
+  modal.id = 'shareModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
   `;
 
+  // Create modal content
+  const content = document.createElement('div');
+  content.style.cssText = `
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    animation: slideUp 0.3s ease;
+  `;
+
+  const twitterUrl = buildTwitterUrl();
+
+  content.innerHTML = `
+    <style>
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes slideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .modal-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+      }
+      .close-btn {
+        background: #f0f0f0;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 20px;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+      .close-btn:hover {
+        background: #e0e0e0;
+      }
+      .siggy-image {
+        width: 100%;
+        max-width: 400px;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        margin: 20px auto;
+        display: block;
+      }
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        flex: 1;
+        min-width: 140px;
+        padding: 14px 20px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .btn-twitter {
+        background: #1da1f2;
+        color: white;
+      }
+      .btn-twitter:hover {
+        background: #1a91da;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(29,161,242,0.4);
+      }
+      .btn-download {
+        background: #10b981;
+        color: white;
+      }
+      .btn-download:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+      }
+      .btn-copy {
+        background: #8b5cf6;
+        color: white;
+      }
+      .btn-copy:hover {
+        background: #7c3aed;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(139,92,246,0.4);
+      }
+      .hint {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-top: 16px;
+        line-height: 1.5;
+      }
+      .success-msg {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 12px;
+        text-align: center;
+        font-size: 14px;
+        display: none;
+      }
+      @media (max-width: 600px) {
+        .button-group {
+          flex-direction: column;
+        }
+        .btn {
+          width: 100%;
+        }
+      }
+    </style>
+    
+    <div class="modal-header">
+      <h2 class="modal-title">🎃 Your Siggy is Ready!</h2>
+      <button class="close-btn" onclick="document.getElementById('shareModal').remove()">×</button>
+    </div>
+    
+    ${imgData ? `
+      <img src="${imgData}" class="siggy-image" alt="Siggy character" id="siggyImage"/>
+      
+      <div class="button-group">
+        <a href="${twitterUrl}" class="btn btn-twitter" target="_blank">
+          <span>🐦</span>
+          <span>Share on X</span>
+        </a>
+        <button class="btn btn-download" onclick="downloadImage()">
+          <span>💾</span>
+          <span>Download</span>
+        </button>
+        <button class="btn btn-copy" onclick="copyImage()">
+          <span>📋</span>
+          <span>Copy Image</span>
+        </button>
+      </div>
+      
+      <div class="success-msg" id="successMsg"></div>
+      
+      <p class="hint">
+        💡 <strong>Mobile:</strong> Long-press the image to save<br>
+        💡 <strong>Desktop:</strong> Right-click to copy or save
+      </p>
+    ` : `
+      <div style="text-align: center; padding: 40px; color: #e74c3c;">
+        <p style="font-size: 18px; margin-bottom: 20px;">⚠️ Failed to generate image</p>
+        <a href="${twitterUrl}" class="btn btn-twitter" target="_blank">
+          <span>🐦</span>
+          <span>Share on X Anyway</span>
+        </a>
+      </div>
+    `}
+  `;
+
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+
+  // Close on overlay click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+
+  // Close on ESC key
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      modal.remove();
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+// Download image function
+window.downloadImage = function() {
+  const img = document.getElementById('siggyImage');
+  if (!img) return;
+  
+  const link = document.createElement('a');
+  link.href = img.src;
+  link.download = `siggy-halloween-${Date.now()}.png`;
+  link.click();
+  
+  showSuccessMessage('Image downloaded! 💾');
+};
+
+// Copy image to clipboard
+window.copyImage = async function() {
+  const img = document.getElementById('siggyImage');
+  if (!img) return;
+  
   try {
-    newWindow.document.open();
-    newWindow.document.write(html);
-    newWindow.document.close();
-  } catch (e) {
-    window.location.href = twitterUrl;
+    // Convert base64 to blob
+    const response = await fetch(img.src);
+    const blob = await response.blob();
+    
+    // Copy to clipboard
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+    
+    showSuccessMessage('Image copied to clipboard! 📋');
+  } catch (error) {
+    console.error('Copy failed:', error);
+    showSuccessMessage('❌ Copy failed. Try right-click instead.');
   }
 };
+
+function showSuccessMessage(message) {
+  const msgEl = document.getElementById('successMsg');
+  if (!msgEl) return;
+  
+  msgEl.textContent = message;
+  msgEl.style.display = 'block';
+  
+  setTimeout(() => {
+    msgEl.style.display = 'none';
+  }, 3000);
+}
+
+// Make showItems available globally
+window.showItems = showItems;
+
+// Initialize on load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
