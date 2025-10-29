@@ -231,6 +231,12 @@ function updateCharacter(type, index) {
 
 document.getElementById("shareBtn").onclick = async function () {
   const area = document.getElementById("character");
+  // Mở cửa sổ MỚI NGAY LẬP TỨC để không bị chặn popup trên mobile
+  const newWindow = window.open("about:blank", "_blank");
+
+  // Nếu vẫn bị chặn, đặt cờ fallback dùng điều hướng thẳng
+  let shouldRedirect = !newWindow;
+
   // Thêm lớp nền tạm cho ảnh chia sẻ (background2.png mờ 0.2)
   const bgLayer = document.createElement("div");
   bgLayer.style.position = "absolute";
@@ -244,42 +250,55 @@ document.getElementById("shareBtn").onclick = async function () {
   bgLayer.style.opacity = "0.3";
   bgLayer.style.zIndex = "0";
   bgLayer.style.pointerEvents = "none";
-  // Chèn làm phần tử đầu để nằm dưới các layer khác
   area.insertBefore(bgLayer, area.firstChild);
-  // Tạm thời bỏ nền/viền/đổ bóng khi xuất ảnh
   area.classList.add("exporting");
 
-  const canvas = await html2canvas(area, {
-    backgroundColor: null,
-    useCORS: true,
-    scale: 2
-  });
-
-  // Khôi phục lại kiểu sau khi chụp
-  area.classList.remove("exporting");
-  // Gỡ lớp nền tạm
-  if (bgLayer && bgLayer.parentNode) {
-    bgLayer.parentNode.removeChild(bgLayer);
+  let imgData = "";
+  try {
+    const canvas = await html2canvas(area, {
+      backgroundColor: null,
+      useCORS: true,
+      scale: 2
+    });
+    imgData = canvas.toDataURL("image/png");
+  } catch (e) {
+    // Nếu có lỗi chụp, vẫn tiếp tục chia sẻ text
+  } finally {
+    area.classList.remove("exporting");
+    if (bgLayer && bgLayer.parentNode) {
+      bgLayer.parentNode.removeChild(bgLayer);
+    }
   }
 
-  const imgData = canvas.toDataURL("image/png");
-
-  // 💬 Tạo nội dung chia sẻ
-const text = encodeURIComponent(
-  "🎃 I just joined #SiggyHalloween contest!\n\nHelp Siggy get the purr-fect Halloween outfit 👻\n\nTry it now 👉 siggyhalloween.ritual.fun"
-);
+  const text = encodeURIComponent(
+    "🎃 I just joined #SiggyHalloween contest!\n\nHelp Siggy get the purr-fect Halloween outfit 👻\n\nTry it now 👉 siggyhalloween.ritual.fun"
+  );
   const twitterUrl = `https://twitter.com/intent/tweet?text=${text}`;
 
-  // ⚡ Hiển thị ảnh vừa chụp để người chơi lưu hoặc tweet
-  const newWindow = window.open();
-  newWindow.document.write(`
+  if (shouldRedirect) {
+    // Fallback khi popup bị chặn: điều hướng thẳng tới X
+    window.location.href = twitterUrl;
+    return;
+  }
+
+  // Ghi nội dung vào cửa sổ đã mở lúc đầu
+  const html = `
     <html>
-      <body style="text-align:center; font-family:sans-serif;">
-        <h2>Share Your Siggy!</h2>
-        <img src="${imgData}" style="width:300px; border-radius:10px; box-shadow:0 0 5px #999;"/>
-        <p><a href="${twitterUrl}" target="_blank" style="font-size:18px;">Post on X 🚀</a></p>
-        <p>(Right-click to save your image if needed)</p>
+      <head><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
+      <body style="text-align:center; font-family:sans-serif; margin:16px;">
+        <h2 style="margin:12px 0;">Share Your Siggy!</h2>
+        ${imgData ? `<img src="${imgData}" style="max-width:92vw; height:auto; border-radius:10px; box-shadow:0 0 5px #999;"/>` : ''}
+        <p style="margin:16px 0;"><a href="${twitterUrl}" target="_self" style="font-size:18px; text-decoration:none; padding:10px 14px; border-radius:10px; background:#000; color:#fff; display:inline-block;">Post on X 🚀</a></p>
+        <p style="opacity:.7; font-size:14px;">Tap and hold the image to save (if needed)</p>
       </body>
     </html>
-  `);
+  `;
+  try {
+    newWindow.document.open();
+    newWindow.document.write(html);
+    newWindow.document.close();
+  } catch (e) {
+    // Nếu không thể ghi vì popup bị chặn giữa chừng
+    window.location.href = twitterUrl;
+  }
 };
