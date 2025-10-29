@@ -255,10 +255,20 @@ document.getElementById("shareBtn").onclick = async function () {
 
   let imgData = "";
   try {
-    const canvas = await html2canvas(area, {
+    // Chụp theo bounding box của #character để luôn chỉ lấy phần ô nhân vật
+    const rect = area.getBoundingClientRect();
+    const canvas = await html2canvas(document.body, {
       backgroundColor: null,
       useCORS: true,
-      scale: 2
+      scale: Math.max(2, window.devicePixelRatio || 1),
+      x: Math.round(rect.left + window.scrollX),
+      y: Math.round(rect.top + window.scrollY),
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+      windowWidth: document.documentElement.clientWidth,
+      windowHeight: document.documentElement.clientHeight,
+      scrollX: -window.scrollX,
+      scrollY: -window.scrollY
     });
     imgData = canvas.toDataURL("image/png");
   } catch (e) {
