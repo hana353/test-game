@@ -75,6 +75,13 @@ window.onload = () => {
   document.getElementById("itemList").classList.add("hidden");
 };
 
+// Ngăn menu ngữ cảnh khi nhấn giữ trên mobile (tránh gây khó chịu khi chạm)
+document.addEventListener("contextmenu", function (e) {
+  if (e.target && (e.target.classList && e.target.classList.contains("item-thumb"))) {
+    e.preventDefault();
+  }
+}, { capture: true });
+
 // ==========================
 // 🖼️ Hiển thị danh sách item
 // ==========================
