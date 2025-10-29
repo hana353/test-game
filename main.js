@@ -247,7 +247,7 @@ document.getElementById("shareBtn").onclick = async function () {
   bgLayer.style.backgroundImage = "url('./images4/background2.png')";
   bgLayer.style.backgroundSize = "cover";
   bgLayer.style.backgroundPosition = "center";
-  bgLayer.style.opacity = "0.3";
+  bgLayer.style.opacity = "1";
   bgLayer.style.zIndex = "0";
   bgLayer.style.pointerEvents = "none";
   area.insertBefore(bgLayer, area.firstChild);
