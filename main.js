@@ -284,9 +284,9 @@ document.getElementById("shareBtn").onclick = async function () {
   // Ghi nội dung vào cửa sổ đã mở lúc đầu
   const html = `
     <html>
-      <body style="text-align:center; font-family:sans-serif;">
+<body style="text-align:center; font-family:sans-serif; padding: 20px;">
         <h2>Share Your Siggy!</h2>
-        ${imgData ? `<img src="${imgData}" style="width:300px; border-radius:10px; box-shadow:0 0 5px #999;"/>` : ''}
+        ${imgData ? `<img src="${imgData}" style="max-width:90vw; width:100%; height:auto; border-radius:12px; box-shadow:0 0 6px #999;"/>` : ''}
         <p><a href="${twitterUrl}" target="_blank" style="font-size:18px;">Post on X 🚀</a></p>
         <p>(Right-click to save your image if needed)</p>
       </body>
