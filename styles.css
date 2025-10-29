@@ -308,32 +308,33 @@ button:hover {
 
   #captureArea {
     background-attachment: scroll;
+    /* chừa chỗ cho thanh nút cố định dưới đáy */
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
   }
-  /* Biến list thành bottom sheet để không che nhân vật */
+  /* Thanh list ngang ngay dưới ô nhân vật */
   #itemList {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: calc(56px + env(safe-area-inset-bottom));
+    position: relative;
+    top: auto;
+    left: auto;
     width: 100%;
-    max-height: 42vh;
     height: auto;
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    grid-template-columns: repeat(2, 1fr);
-    justify-items: center;
-    padding: 10px 12px;
-    margin: 0;
-    border-top-left-radius: 14px;
-    border-top-right-radius: 14px;
-    overflow-y: auto;
-    z-index: 100;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 8px 10px;
+    margin-top: 8px;
+    border-radius: 12px;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 8px;
+    scroll-snap-type: x mandatory;
   }
+  #itemList h3 { display: none; }
 
   .item-thumb {
     width: 100px;
-    height: 160px;
+    height: 140px;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
   }
 
   #box {
