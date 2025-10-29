@@ -481,12 +481,13 @@ function showShareModal(imgData) {
         display: flex;
         gap: 12px;
         margin-top: 20px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap; /* keep in one row */
       }
       .btn {
-        flex: 1;
-        min-width: 140px;
+        flex: 1 1 0%; /* equal widths */
+        min-width: 0; /* allow equal distribution */
         padding: 14px 20px;
+        height: 48px; /* equal height */
         border: none;
         border-radius: 10px;
         font-size: 16px;
@@ -498,19 +499,22 @@ function showShareModal(imgData) {
         align-items: center;
         justify-content: center;
         gap: 8px;
+        box-sizing: border-box;
       }
       .btn-twitter {
         background: #1da1f2;
         color: white;
+         margin-top: 17px;
       }
       .btn-twitter:hover {
-        background: #1a91da;
+        background:rgb(20, 123, 187);
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(29,161,242,0.4);
       }
       .btn-download {
         background: #10b981;
         color: white;
+        
       }
       .btn-download:hover {
         background: #059669;
@@ -543,13 +547,10 @@ function showShareModal(imgData) {
         font-size: 14px;
         display: none;
       }
+      /* Keep buttons on one line on small screens too */
       @media (max-width: 600px) {
-        .button-group {
-          flex-direction: column;
-        }
-        .btn {
-          width: 100%;
-        }
+        .button-group { overflow-x: auto; }
+        .btn { flex: 1 1 0%; }
       }
     </style>
     
@@ -563,15 +564,12 @@ function showShareModal(imgData) {
       
       <div class="button-group">
         <a href="${twitterUrl}" class="btn btn-twitter" target="_blank">
-          <span>🐦</span>
           <span>Share on X</span>
         </a>
         <button class="btn btn-download" onclick="downloadImage()">
-          <span>💾</span>
           <span>Download</span>
         </button>
         <button class="btn btn-copy" onclick="copyImage()">
-          <span>📋</span>
           <span>Copy Image</span>
         </button>
       </div>
