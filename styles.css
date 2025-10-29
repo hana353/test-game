@@ -226,16 +226,23 @@ img, .item-thumb {
   }
 }
 
-/* 💜 NÚT CHỌN ITEM */
-/* Nhóm nút căn sát đáy khung */
+/* 💜 NÚT CHỌN ITEM - GHIM DƯỚI MÀN HÌNH */
 .buttonBox {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  padding-bottom: 0px; /* Tạo khoảng cách nhẹ với mép khung */
+  padding: 8px 12px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
   margin: 0;
-}
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 button {
   margin-top: 1em;
