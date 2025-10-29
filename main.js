@@ -283,21 +283,30 @@ document.getElementById("shareBtn").onclick = async function () {
 
   // Ghi nội dung vào cửa sổ đã mở lúc đầu
   const html = `
-    <html>
-      <body style="text-align:center; font-family:sans-serif;">
-        <h2>Share Your Siggy!</h2>
-        ${imgData ? `<img src="${imgData}" style="width:300px; border-radius:10px; box-shadow:0 0 5px #999;"/>` : ''}
-        <p><a href="${twitterUrl}" target="_blank" style="font-size:18px;">Post on X 🚀</a></p>
-        <p>(Right-click to save your image if needed)</p>
-      </body>
-    </html>
+  <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { text-align: center; font-family: sans-serif; }
+        img.siggy { width: 300px; height: 300px; border-radius: 10px; box-shadow:0 0 5px #999; object-fit: cover; }
+        a { font-size: 18px; }
+        p { margin: 5px 0 0 0; }
+      </style>
+    </head>
+    <body>
+      <h2>Share Your Siggy!</h2>
+      ${imgData ? `<img src="${imgData}" class="siggy"/>` : ''}
+      <p><a href="${twitterUrl}" target="_blank">Post on X 🚀</a></p>
+      <p>(Right-click to save your image if needed)</p>
+    </body>
+  </html>
   `;
+
   try {
     newWindow.document.open();
     newWindow.document.write(html);
     newWindow.document.close();
   } catch (e) {
-    // Nếu không thể ghi vì popup bị chặn giữa chừng
     window.location.href = twitterUrl;
   }
 };
