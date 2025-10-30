@@ -280,14 +280,15 @@ async function handleShare() {
 }
 
 function createCaptureWrapper() {
-  // Get character dimensions - EXACT size, no enlargement
+  // Get character dimensions
   const charRect = DOM.character.getBoundingClientRect();
   
-  // Use exact character dimensions for square/proper aspect ratio
-  const captureWidth = charRect.width;
-  const captureHeight = charRect.height;
+  // Force square aspect ratio - use the smaller dimension or force square
+  const size = Math.min(charRect.width, charRect.height);
+  const captureWidth = size;
+  const captureHeight = size;
   
-  // Create wrapper with EXACT character size
+  // Create wrapper with EXACT square size
   const wrapper = document.createElement('div');
   Object.assign(wrapper.style, {
     position: 'fixed',
@@ -332,11 +333,16 @@ function createCaptureWrapper() {
     imageRendering: '-webkit-optimize-contrast'
   });
   
-  // Ensure all child elements have high quality rendering
+  // Ensure all child elements have high quality rendering and proper sizing
   const allChildren = charClone.querySelectorAll('*');
   allChildren.forEach(child => {
     child.style.imageRendering = 'high-quality';
     child.style.imageRendering = '-webkit-optimize-contrast';
+    // Force children to respect parent dimensions
+    if (child.style.position === 'absolute') {
+      child.style.maxWidth = '100%';
+      child.style.maxHeight = '100%';
+    }
   });
   
   wrapper.appendChild(charClone);
