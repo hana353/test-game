@@ -371,17 +371,35 @@ function waitForImagesToLoad(element) {
 }
 
 async function captureCharacter(wrapper) {
+  // Calculate optimal scale based on device pixel ratio
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  const optimalScale = Math.max(3, devicePixelRatio * 2); // Minimum 3x, or 2x device pixel ratio
+  
   const canvas = await html2canvas(wrapper, {
     backgroundColor: null,
     useCORS: true,
     allowTaint: false,
-    scale: 2,
+    scale: optimalScale, // Increased from 2 to at least 3
     width: wrapper.offsetWidth,
     height: wrapper.offsetHeight,
     logging: false,
-    imageTimeout: 5000 // 5 second timeout for images
+    imageTimeout: 5000,
+    // Additional quality settings
+    foreignObjectRendering: false, // Better compatibility
+    removeContainer: true,
+    async: true,
+    onclone: (clonedDoc) => {
+      // Ensure all images are fully rendered in clone
+      const clonedWrapper = clonedDoc.querySelector('div');
+      if (clonedWrapper) {
+        clonedWrapper.style.imageRendering = 'high-quality';
+        clonedWrapper.style.imageRendering = '-webkit-optimize-contrast';
+      }
+    }
   });
-  return canvas.toDataURL('image/png');
+  
+  // Convert to high-quality PNG
+  return canvas.toDataURL('image/png', 1.0); // Maximum quality
 }
 
 
@@ -481,13 +499,12 @@ function showShareModal(imgData) {
         display: flex;
         gap: 12px;
         margin-top: 20px;
-        flex-wrap: nowrap; /* keep in one row */
+        flex-wrap: wrap;
       }
       .btn {
-        flex: 1 1 0%; /* equal widths */
-        min-width: 0; /* allow equal distribution */
+        flex: 1;
+        min-width: 140px;
         padding: 14px 20px;
-        height: 48px; /* equal height */
         border: none;
         border-radius: 10px;
         font-size: 16px;
@@ -499,22 +516,19 @@ function showShareModal(imgData) {
         align-items: center;
         justify-content: center;
         gap: 8px;
-        box-sizing: border-box;
       }
       .btn-twitter {
         background: #1da1f2;
         color: white;
-         margin-top: 17px;
       }
       .btn-twitter:hover {
-        background:rgb(20, 123, 187);
+        background: #1a91da;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(29,161,242,0.4);
       }
       .btn-download {
         background: #10b981;
         color: white;
-        
       }
       .btn-download:hover {
         background: #059669;
@@ -547,10 +561,13 @@ function showShareModal(imgData) {
         font-size: 14px;
         display: none;
       }
-      /* Keep buttons on one line on small screens too */
       @media (max-width: 600px) {
-        .button-group { overflow-x: auto; }
-        .btn { flex: 1 1 0%; }
+        .button-group {
+          flex-direction: column;
+        }
+        .btn {
+          width: 100%;
+        }
       }
     </style>
     
@@ -564,12 +581,15 @@ function showShareModal(imgData) {
       
       <div class="button-group">
         <a href="${twitterUrl}" class="btn btn-twitter" target="_blank">
+          <span>🐦</span>
           <span>Share on X</span>
         </a>
         <button class="btn btn-download" onclick="downloadImage()">
+          <span>💾</span>
           <span>Download</span>
         </button>
         <button class="btn btn-copy" onclick="copyImage()">
+          <span>📋</span>
           <span>Copy Image</span>
         </button>
       </div>
