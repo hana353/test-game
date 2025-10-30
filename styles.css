@@ -113,11 +113,13 @@ img, .item-thumb {
   background-size: cover !important;
   z-index: 0; 
 }
-#girl { background: url("./images4/1.png") no-repeat center; background-size: contain; z-index: 1; }
 #clothes { z-index: 2; }
 #hat { z-index: 3; }
 #accessory { z-index: 6; pointer-events: none; }
 #pet { z-index: 5; }
+#skin {
+  z-index: 1;
+}
 
 /* 🪞 DANH SÁCH ITEM */
 #itemList {

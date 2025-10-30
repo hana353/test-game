@@ -21,7 +21,7 @@ const CONFIG = {
 
 // State management
 const state = {
-  skin: -1,
+  skin: 5,
   background: -1,
   hat: -1,
   clothes: -1,
