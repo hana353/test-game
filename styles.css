@@ -217,9 +217,18 @@ button:hover { background-color: rgb(248,252,255); box-shadow:0 2px 4px 1px rgb(
     padding:8px 10px; margin-top:8px; border-radius:12px;
     display:flex; overflow-x:auto; overflow-y:hidden; gap:8px;
     scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
-  #itemList h3 { display:none; }
-
+  
+  #itemList::-webkit-scrollbar {
+    display: none;
+  }
+  #itemList {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
   .item-thumb {
     width: 90px;    /* Vuông mobile */
     height: 90px;   /* Vuông mobile */
