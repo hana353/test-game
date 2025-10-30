@@ -109,6 +109,10 @@ img, .item-thumb {
   background-position: center;
 }
 
+#background { 
+  background-size: cover !important;
+  z-index: 0; 
+}
 #girl { background: url("./images4/1.png") no-repeat center; background-size: contain; z-index: 1; }
 #clothes { z-index: 2; }
 #hat { z-index: 3; }

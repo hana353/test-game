@@ -2,12 +2,16 @@
 const CONFIG = {
   multiSelectTypes: new Set(['accessory', 'pet']),
   folders: {
+    skin: 'skin',
+    background: 'background',
     hat: 'hat',
     clothes: 'clothes',
     accessory: 'accessory',
     pet: 'pet'
   },
   items: {
+    skin: ['S1.png', 'S2.png', 'S3.png', 'S4.png', 'S5.png', 'S6.png'],
+    background: ['B1.png', 'B2.png', 'B3.png', 'B4.png'],
     hat: ['H1.png', 'H2.png', 'H3.png', 'H4.png', 'H5.png', 'H6.png'],
     clothes: ['C1.png', 'C2.png', 'C3.png', 'C4.png', 'C5.png', 'C6.png'],
     accessory: ['A1.png', 'A2.png', 'A3.png', 'A4.png', 'A5.png', 'A6.png', 'A7.png', 'A8.png', 'A9.png'],
@@ -17,6 +21,8 @@ const CONFIG = {
 
 // State management
 const state = {
+  skin: -1,
+  background: -1,
   hat: -1,
   clothes: -1,
   accessory: [],
@@ -211,11 +217,15 @@ function renderSingleLayer(element, type) {
   }
 
   const imagePath = getImagePath(type, CONFIG.items[type][index]);
+  
+  // Special handling for background - use cover instead of contain
+  const bgSize = (type === 'background') ? 'cover' : 'contain';
+  
   Object.assign(element.style, {
     backgroundImage: `url('${imagePath}')`,
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center',
-    backgroundSize: 'contain',
+    backgroundSize: bgSize,
     position: 'absolute',
     width: '100%',
     height: '100%',
@@ -302,15 +312,22 @@ function createCaptureWrapper() {
     imageRendering: '-webkit-optimize-contrast'
   });
 
-  // Add background layer - fit within wrapper dimensions
+  // Add background layer with opacity - using selected background or default background2.png
   const bgLayer = document.createElement('div');
+  let bgImageUrl = './images4/background2.png'; // default
+  
+  // If user selected a background, use that instead
+  if (state.background >= 0 && CONFIG.items.background[state.background]) {
+    bgImageUrl = getImagePath('background', CONFIG.items.background[state.background]);
+  }
+  
   Object.assign(bgLayer.style, {
     position: 'absolute',
     top: '0',
     left: '0',
     width: '100%',
     height: '100%',
-    backgroundImage: "url('./images4/background2.png')",
+    backgroundImage: `url('${bgImageUrl}')`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
@@ -431,7 +448,7 @@ function buildTwitterUrl() {
     '🎃 I just joined #SiggyHalloween! \n\n' +
     'Help Siggy get the purr-fect Halloween outfit 👻\n\n' +
     'Try it now 👉 https://siggyhalloween-ritual.xyz/ \n\n ' +
-    '#Ritualnet #Ritualfnd @RitualVietnam'
+    '#Ritualnet #Ritualfnd'
   );
   return `https://twitter.com/intent/tweet?text=${text}`;
 }
@@ -623,7 +640,7 @@ function showShareModal(imgData) {
       <div style="text-align: center; padding: 40px; color: #e74c3c;">
         <p style="font-size: 18px; margin-bottom: 20px;">⚠️ Failed to generate image</p>
         <a href="${twitterUrl}" class="btn btn-twitter" target="_blank">
-          <span>🐦</span>
+          <span>🦆</span>
           <span>Share on X Anyway</span>
         </a>
       </div>
